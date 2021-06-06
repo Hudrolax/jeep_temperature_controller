@@ -21,8 +21,8 @@ const int pin_FAN = 9;        // пин ШИМ вентилятора
 
 
 // VARS
-const int target_engine_temp = 950;  // целевая температура двигателя
-const int target_at_temp = 950;  // целевая температура АКПП
+const int target_engine_temp = 980;  // целевая температура двигателя
+const int target_at_temp = 800;  // целевая температура АКПП
 const int FAN_frequency = 10;       // частота ШИМ в гц
 const int display_update_frquency = 2; // частота обновления дисплея в гц
 
@@ -37,6 +37,7 @@ bool overheat = false;
 unsigned long last_display_update_time = 0;
 unsigned long last_buzzer_on_time = 0; 
 unsigned long last_pwm_cycle = 0; 
+unsigned long las_duty_cycle_calculating = 0;
 
 
 void setup(void)
@@ -80,11 +81,15 @@ void FAN_control()
 {
   if (switch_mode == 0)
   {
-    duty_cycle = map(engine_temp, target_engine_temp-50, target_engine_temp+50, 10, 90);
-    int at_duty_cycle = map(trans_temp, target_at_temp-50, target_at_temp+50, 10, 90);
-    if (at_duty_cycle > duty_cycle) duty_cycle = at_duty_cycle;
-    if (duty_cycle > 90) duty_cycle = 90;
-    if (duty_cycle < 10) duty_cycle = 0;
+    unsigned long now = millis();
+    if (now - las_duty_cycle_calculating > 10000){
+      duty_cycle = map(engine_temp, target_engine_temp, target_engine_temp+100, 10, 90);
+      int at_duty_cycle = map(trans_temp, target_at_temp, target_at_temp+200, 10, 90);
+      if (at_duty_cycle > duty_cycle) duty_cycle = at_duty_cycle;
+      if (duty_cycle > 90) duty_cycle = 90;
+      if (duty_cycle < 10) duty_cycle = 0;
+      las_duty_cycle_calculating = now;
+    }
   }else
     if (switch_mode == 1) duty_cycle = 0;
       else if (switch_mode == 2) duty_cycle = 90;
@@ -186,9 +191,9 @@ void read_analog_inputs()
   int digit_voltage = digit_voltage1 + digit_voltage2 + digit_voltage3;
   digit_voltage = digit_voltage / 3;
 
-  engine_temp = map(engine_vol, 543, 180, 530, 1000);
-  trans_temp = map(trans_vol, 527, 645, 210, 700);
-  voltage = map(digit_voltage, 0, 658, 0, 1400);
+  engine_temp = map(engine_vol, 543, 180, 520, 980);
+  trans_temp = map(trans_vol, 527, 645, 260, 750);
+  voltage = map(digit_voltage, 0, 658, 0, 1445);
   voltage = voltage/100;
 
   if (engine_temp < 0) engine_temp = 0;

@@ -21,8 +21,8 @@ const int pin_FAN = 9;        // пин ШИМ вентилятора
 
 
 // VARS
-const int target_engine_temp = 980;  // целевая температура двигателя
-const int target_at_temp = 800;  // целевая температура АКПП
+const int target_engine_temp = 970;  // целевая температура двигателя x10
+const int target_at_temp = 800;  // целевая температура АКПП x10
 const int FAN_frequency = 10;       // частота ШИМ в гц
 const int display_update_frquency = 2; // частота обновления дисплея в гц
 
@@ -33,6 +33,7 @@ int duty_cycle = 0;
 float voltage = 0;
 
 bool overheat = false;
+bool low_voltage = false;
 
 unsigned long last_display_update_time = 0;
 unsigned long last_buzzer_on_time = 0; 
@@ -64,6 +65,7 @@ void loop(void)
     read_analog_inputs(); // чтение датчиков
     read_switch_state();  // читаем состояние переключателя
     check_overheat();
+    check_low_voltage();
     FAN_control();        // отработка алгоритма расчета скважности (управление вентилятором)
     buzzer();             // пищим пищалкой, если нужно
     display_func();       // отрисовываем дисплей
@@ -77,14 +79,19 @@ void check_overheat()
     overheat = engine_temp > 1100 || trans_temp > 1200;
 }
 
+void check_low_voltage()
+{
+    low_voltage = voltage < 12;
+}
+
 void FAN_control()
 {
   if (switch_mode == 0)
   {
     unsigned long now = millis();
-    if (now - las_duty_cycle_calculating > 10000){
-      duty_cycle = map(engine_temp, target_engine_temp, target_engine_temp+100, 10, 90);
-      int at_duty_cycle = map(trans_temp, target_at_temp, target_at_temp+200, 10, 90);
+    if (now - las_duty_cycle_calculating > 3000){
+      duty_cycle = map(engine_temp, target_engine_temp, 1050, 10, 90);
+      int at_duty_cycle = map(trans_temp, target_at_temp, 1050, 10, 90);
       if (at_duty_cycle > duty_cycle) duty_cycle = at_duty_cycle;
       if (duty_cycle > 90) duty_cycle = 90;
       if (duty_cycle < 10) duty_cycle = 0;
@@ -220,7 +227,14 @@ void buzzer()
         last_buzzer_on_time = now;
         tone(pin_buzzer, 220, 500); // перегрев
       }
-  } else if (switch_mode > 0){
+  } else if (low_voltage)
+  {
+    if (now - last_buzzer_on_time > 3000)
+      {
+        last_buzzer_on_time = now;
+        tone(pin_buzzer, 1200, 500); // низкое напряжение
+      }
+  }else if (switch_mode > 0){
       if(switch_mode == 1){
         if (now - last_buzzer_on_time > 5000)
         {

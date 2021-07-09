@@ -21,12 +21,12 @@ const byte pin_FAN = 9;        // пин ШИМ вентилятора
 
 
 // VARS
-const byte target_engine_temp = 97;  // целевая температура двигателя
-const byte target_at_temp = 80;  // целевая температура АКПП
+const byte target_engine_temp = 960;  // целевая температура двигателя
+const byte target_at_temp = 960;  // целевая температура АКПП
 const byte FAN_frequency = 10;       // частота ШИМ в гц
 const byte display_update_frquency = 2; // частота обновления дисплея в гц
 
-const byte arrays_length = 25;
+const byte arrays_length = 3;
 int engine_temp_array[arrays_length];
 int trans_temp_array[arrays_length];
 
@@ -94,7 +94,7 @@ void loop(void)
 
 void check_overheat()
 {
-    overheat = engine_temp > 110 || trans_temp > 120;
+    overheat = engine_temp > 1080 || trans_temp > 1080;
 }
 
 void check_low_voltage()
@@ -108,8 +108,8 @@ void FAN_control()
   {
     unsigned long now = millis();
     if (now - las_duty_cycle_calculating > 3000){
-      duty_cycle = map(engine_temp, target_engine_temp, 105, 10, 90);
-      int at_duty_cycle = map(trans_temp, target_at_temp, 105, 10, 90);
+      duty_cycle = map(engine_temp, target_engine_temp, 1020, 10, 90);
+      int at_duty_cycle = map(trans_temp, target_at_temp, 1050, 10, 90);
       if (at_duty_cycle > duty_cycle) duty_cycle = at_duty_cycle;
       if (duty_cycle > 90) duty_cycle = 90;
       if (duty_cycle < 10) duty_cycle = 0;
@@ -144,7 +144,7 @@ void display_func()
   u8g2.setCursor(0,16);
   u8g2.print("E ");
   u8g2.setCursor(20,16);
-  u8g2.print(engine_temp, 1);
+  u8g2.print(engine_temp/10, 1);
 //    u8g2.setCursor(65,16);
 //    u8g2.print("C");
 
@@ -153,7 +153,7 @@ void display_func()
   u8g2.setCursor(0,37);
   u8g2.print("T ");
   u8g2.setCursor(20,37);
-  u8g2.print(trans_temp, 1);
+  u8g2.print(trans_temp/10, 1);
 //    u8g2.setCursor(65,37);
 //    u8g2.print("C");
 
@@ -199,33 +199,24 @@ void display_func()
 void read_analog_inputs()
 {
   int engine_vol1 = analogRead(pin_engine_temp_sensor);
-  delay(20);
   int engine_vol2 = analogRead(pin_engine_temp_sensor);
-  delay(20);
-  int engine_vol3 = analogRead(pin_engine_temp_sensor);
-  int engine_vol = engine_vol1 + engine_vol2 + engine_vol3;
-  engine_vol = engine_vol / 3;
+  int engine_vol = engine_vol1 + engine_vol2;
+  engine_vol = engine_vol / 2;
   
   int trans_vol1 = analogRead(pin_transmission_temp_sensor);
-  delay(25);
   int trans_vol2 = analogRead(pin_transmission_temp_sensor);
-  delay(25);
-  int trans_vol3 = analogRead(pin_transmission_temp_sensor);
-  int trans_vol = trans_vol1 + trans_vol2 + trans_vol3;
-  trans_vol = trans_vol / 3;
+  int trans_vol = trans_vol1 + trans_vol2;
+  trans_vol = trans_vol / 2;
   
   int digit_voltage1 = analogRead(pin_voltmeter_12v);
-  delay(2);
   int digit_voltage2 = analogRead(pin_voltmeter_12v);
-  delay(2);
-  int digit_voltage3 = analogRead(pin_voltmeter_12v);
-  int digit_voltage = digit_voltage1 + digit_voltage2 + digit_voltage3;
-  digit_voltage = digit_voltage / 3;
+  int digit_voltage = digit_voltage1 + digit_voltage2;
+  digit_voltage = digit_voltage / 2;
 
-  add_to_array(engine_temp_array, map(engine_vol, 543, 180, 52, 98));
+  add_to_array(engine_temp_array, map(engine_vol, 543, 180, 520, 980));
   engine_temp = array_average(engine_temp_array);
 
-  add_to_array(trans_temp_array, map(trans_vol, 527, 645, 26, 110));
+  add_to_array(trans_temp_array, map(trans_vol, 527, 645, 360, 750));
   trans_temp = array_average(trans_temp_array);
   
   voltage = map(digit_voltage, 0, 658, 0, 1445);

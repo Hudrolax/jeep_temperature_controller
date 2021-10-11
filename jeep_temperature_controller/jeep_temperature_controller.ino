@@ -7,6 +7,7 @@
 #ifdef U8X8_HAVE_HW_I2C
 #include <Wire.h>
 #endif
+#include <avr/wdt.h>
 
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
@@ -61,6 +62,7 @@ int array_average(int* arr){
 
 void setup(void)
 { 
+  wdt_enable(WDTO_8S);
   Serial.begin(9600);
   u8g2.begin();
 
@@ -90,6 +92,7 @@ void loop(void)
     last_display_update_time = now;
   }
   pwm_cycle();          // отработка ШИМ 
+  wdt_reset();
 }
 
 void check_overheat()

@@ -22,7 +22,7 @@ const byte pin_FAN = 9;        // пин ШИМ вентилятора
 
 
 // VARS
-const int target_engine_temp = 880;  // целевая температура двигателя
+const int target_engine_temp = 900;  // целевая температура двигателя
 const int target_at_temp = 900;  // целевая температура АКПП
 const byte FAN_frequency = 10;       // частота ШИМ в гц
 const byte display_update_frquency = 2; // частота обновления дисплея в гц
@@ -111,7 +111,7 @@ void FAN_control()
   {
     unsigned long now = millis();
     if (now - las_duty_cycle_calculating > 1000){
-      duty_cycle = map(engine_temp, target_engine_temp, 950, 10, 90);
+      duty_cycle = map(engine_temp, target_engine_temp, 970, 10, 90);
       int at_duty_cycle = map(trans_temp, target_at_temp, 1050, 10, 90);
       if (at_duty_cycle > duty_cycle) duty_cycle = at_duty_cycle;
       if (duty_cycle > 90) duty_cycle = 90;
